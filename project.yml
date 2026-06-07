@@ -1,0 +1,62 @@
+name: KhayyamPDFEditor
+options:
+  bundleIdPrefix: com.davood
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  xcodeVersion: "15"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    # Homebrew MuPDF is arm64-only — restrict to Apple Silicon.
+    # To support Intel too, build MuPDF from source as a universal static library.
+    ARCHS: arm64
+    VALID_ARCHS: arm64
+
+targets:
+  KhayyamPDFEditor:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+        type: group
+    configFiles:
+      Debug: Config/LocalPaths.xcconfig
+      Release: Config/LocalPaths.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oxinstudio.KhayyamPDFEditor
+        PRODUCT_NAME: "Khayyam PDF Editor"
+        INFOPLIST_FILE: Sources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/PDFEditorMac.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0.0
+
+        # Swift ↔ Objective-C++ bridge
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/MuPDF/PDFEditorMac-Bridging-Header.h
+        SWIFT_OBJC_INTERFACE_HEADER_NAME: PDFEditorMac-Swift.h
+
+        # MuPDF headers & libs (paths come from Config/LocalPaths.xcconfig)
+        HEADER_SEARCH_PATHS: $(MUPDF_HEADERS)
+        LIBRARY_SEARCH_PATHS: $(MUPDF_LIBS)
+
+        # MUPDF_LDFLAGS is written by setup.sh — it picks the static lib when
+        # available, or falls back to the dynamic lib. Do not edit manually.
+        OTHER_LDFLAGS: $(MUPDF_LDFLAGS)
+
+        # Allow Objective-C++ in the same target
+        GCC_ENABLE_OBJC_EXCEPTIONS: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+
+    dependencies:
+      - framework: PDFKit.framework
+        embed: false
+    scheme:
+      testTargets: []
